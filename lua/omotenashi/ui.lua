@@ -11,6 +11,49 @@ end
 vim.api.nvim_set_hl(0, "OmotenashiCheatsheetNormal", { bg = "#2b2440", fg = "#f5e6ff" })
 vim.api.nvim_set_hl(0, "OmotenashiCheatsheetBorder", { fg = "#c9a7ff" })
 
+local insert_hint_win = nil
+
+function M.close_insert_hint()
+  if insert_hint_win and vim.api.nvim_win_is_valid(insert_hint_win) then
+    vim.api.nvim_win_close(insert_hint_win, true)
+  end
+  insert_hint_win = nil
+end
+
+-- Insert mode中はコマンドラインが showmode の "-- INSERT --" に占有され
+-- vim.notify (echo) が上書きされて見えないため、フォーカスを奪わない
+-- floating window で右下に案内を出し、一定時間後に自動で消す。
+function M.show_insert_hint()
+  M.close_insert_hint()
+
+  local text = " Esc でノーマルモードに戻れます "
+  local buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, { text })
+  vim.bo[buf].bufhidden = "wipe"
+
+  local width = vim.fn.strdisplaywidth(text)
+  local win = vim.api.nvim_open_win(buf, false, {
+    relative = "editor",
+    width = width,
+    height = 1,
+    row = vim.o.lines - 4,
+    col = vim.o.columns - width - 2,
+    style = "minimal",
+    border = "rounded",
+    focusable = false,
+    noautocmd = true,
+  })
+  insert_hint_win = win
+
+  vim.wo[win].winhighlight = "Normal:OmotenashiCheatsheetNormal,FloatBorder:OmotenashiCheatsheetBorder"
+
+  vim.defer_fn(function()
+    if insert_hint_win == win then
+      M.close_insert_hint()
+    end
+  end, 5000)
+end
+
 local cheatsheet_lines = {
   " おもてなしチートシート ",
   "",

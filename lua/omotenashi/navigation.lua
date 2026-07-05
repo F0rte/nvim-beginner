@@ -14,6 +14,19 @@ vim.api.nvim_create_autocmd("CursorHold", {
   end,
 })
 
+-- 挿入モードのまま放置していたら Esc の案内を出す
+vim.api.nvim_create_autocmd("CursorHoldI", {
+  callback = function()
+    ui.show_insert_hint()
+  end,
+})
+
+vim.api.nvim_create_autocmd("InsertLeave", {
+  callback = function()
+    ui.close_insert_hint()
+  end,
+})
+
 vim.api.nvim_create_user_command("Cheatsheet", function()
   ui.show_cheatsheet()
 end, {})
